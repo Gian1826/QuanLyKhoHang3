@@ -15,25 +15,36 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton dangChon;   // nút đang được chọn
     // private Viewdsphieunhap dsPhieu = new Viewdsphieunhap();   // bỏ // khi đã tạo panel này
 
-    public MainFrame() {
+        public MainFrame() {
         initComponents();
         setSize(1200, 700);
         setLocationRelativeTo(null);
 
-        // Nhóm Nhập kho: căn trái và thu gọn mặc định
+        // Hiện thông tin người đăng nhập ở header
+        String ten = PhienDangNhap.tenDangNhap != null ? PhienDangNhap.tenDangNhap : "guest";
+        lblTen.setText(ten);
+        lblTen.setToolTipText(PhienDangNhap.hoTen);
+        lblAvatar.setText(ten.substring(0, Math.min(2, ten.length())).toUpperCase());
+
+        // Hai nhóm menu con: căn trái và thu gọn mặc định
         pnlNhapKho.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
         pnlNhapKho.setVisible(false);
+        pnlTaiKhoan.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+        pnlTaiKhoan.setVisible(false);
 
         // Vùng nội dung bên phải: mỗi màn hình là một "card"
         pnlContent.setLayout(new java.awt.CardLayout());
         pnlContent.add(new javax.swing.JPanel(), "home");
         pnlContent.add(new Viewnhaphang(), "lapphieu");
         // pnlContent.add(dsPhieu, "dsphieu");
+        Viewtaikhoan tkPanel = new Viewtaikhoan();
+        pnlContent.add(tkPanel, "taikhoan");
 
         // Căn trái và gắn hiệu ứng rê chuột cho mọi nút
         javax.swing.JButton[] tatCa = {
             btnTrangChu, btnNhapKho, btnLapPhieu, btnDSPhieu, btnLuuTru,
-            btnLayHang, btnXuatKho, btnHoanTra, btnKiemKe, btnBaoCao, btnTaiKhoan
+            btnLayHang, btnXuatKho, btnHoanTra, btnKiemKe, btnBaoCao, btnTaiKhoan,
+            btnTaiKhoanCuaToi, btnDangXuat
         };
         for (javax.swing.JButton b : tatCa) {
             b.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
@@ -48,6 +59,23 @@ public class MainFrame extends javax.swing.JFrame {
             // dsPhieu.napDuLieu();
             hienThi("dsphieu", btnDSPhieu);
         });
+        btnTaiKhoanCuaToi.addActionListener(e -> {
+            tkPanel.napThongTin();
+            hienThi("taikhoan", btnTaiKhoanCuaToi);
+        });
+        btnDangXuat.addActionListener(e -> dangXuat());
+    }
+
+    // Đăng xuất: hỏi xác nhận rồi quay về màn hình đăng nhập
+    private void dangXuat() {
+        int c = javax.swing.JOptionPane.showConfirmDialog(this,
+                "Bạn muốn đăng xuất?", "Đăng xuất",
+                javax.swing.JOptionPane.YES_NO_OPTION);
+        if (c == javax.swing.JOptionPane.YES_OPTION) {
+            PhienDangNhap.xoa();
+            dispose();
+            new DangNhapFrame().setVisible(true);
+        }
     }
 
     // Đóng/mở nhóm menu con
@@ -113,6 +141,9 @@ public class MainFrame extends javax.swing.JFrame {
         btnKiemKe = new javax.swing.JButton();
         btnBaoCao = new javax.swing.JButton();
         btnTaiKhoan = new javax.swing.JButton();
+        pnlTaiKhoan = new javax.swing.JPanel();
+        btnTaiKhoanCuaToi = new javax.swing.JButton();
+        btnDangXuat = new javax.swing.JButton();
         pnlContent = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -310,7 +341,38 @@ public class MainFrame extends javax.swing.JFrame {
         btnTaiKhoan.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         btnTaiKhoan.setMaximumSize(new java.awt.Dimension(32767, 42));
         btnTaiKhoan.setOpaque(true);
+        btnTaiKhoan.addActionListener(this::btnTaiKhoanActionPerformed);
         pnlItems.add(btnTaiKhoan);
+
+        pnlTaiKhoan.setBackground(new java.awt.Color(44, 59, 65));
+        pnlTaiKhoan.setLayout(new javax.swing.BoxLayout(pnlTaiKhoan, javax.swing.BoxLayout.LINE_AXIS));
+        pnlItems.add(pnlTaiKhoan);
+
+        btnTaiKhoanCuaToi.setBackground(new java.awt.Color(44, 59, 65));
+        btnTaiKhoanCuaToi.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        btnTaiKhoanCuaToi.setForeground(new java.awt.Color(184, 199, 206));
+        btnTaiKhoanCuaToi.setText("Tài khoản của tôi");
+        btnTaiKhoanCuaToi.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 44, 0, 0));
+        btnTaiKhoanCuaToi.setBorderPainted(false);
+        btnTaiKhoanCuaToi.setContentAreaFilled(false);
+        btnTaiKhoanCuaToi.setFocusPainted(false);
+        btnTaiKhoanCuaToi.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        btnTaiKhoanCuaToi.setMaximumSize(new java.awt.Dimension(32767, 34));
+        btnTaiKhoanCuaToi.setOpaque(true);
+        pnlItems.add(btnTaiKhoanCuaToi);
+
+        btnDangXuat.setBackground(new java.awt.Color(44, 59, 65));
+        btnDangXuat.setFont(new java.awt.Font("Segoe UI", 1, 13)); // NOI18N
+        btnDangXuat.setForeground(new java.awt.Color(184, 199, 206));
+        btnDangXuat.setText("Đăng xuất");
+        btnDangXuat.setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 44, 0, 0));
+        btnDangXuat.setBorderPainted(false);
+        btnDangXuat.setContentAreaFilled(false);
+        btnDangXuat.setFocusPainted(false);
+        btnDangXuat.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        btnDangXuat.setMaximumSize(new java.awt.Dimension(32767, 34));
+        btnDangXuat.setOpaque(true);
+        pnlItems.add(btnDangXuat);
 
         pnlMenu.add(pnlItems, java.awt.BorderLayout.CENTER);
 
@@ -336,6 +398,10 @@ public class MainFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnLayHangActionPerformed
 
+    private void btnTaiKhoanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTaiKhoanActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnTaiKhoanActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -346,6 +412,7 @@ public class MainFrame extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBaoCao;
     private javax.swing.JButton btnDSPhieu;
+    private javax.swing.JButton btnDangXuat;
     private javax.swing.JButton btnHoanTra;
     private javax.swing.JButton btnKiemKe;
     private javax.swing.JButton btnLapPhieu;
@@ -353,6 +420,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton btnLuuTru;
     private javax.swing.JButton btnNhapKho;
     private javax.swing.JButton btnTaiKhoan;
+    private javax.swing.JButton btnTaiKhoanCuaToi;
     private javax.swing.JButton btnTrangChu;
     private javax.swing.JButton btnXuatKho;
     private javax.swing.JLabel lblAvatar;
@@ -362,5 +430,6 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JPanel pnlItems;
     private javax.swing.JPanel pnlMenu;
     private javax.swing.JPanel pnlNhapKho;
+    private javax.swing.JPanel pnlTaiKhoan;
     // End of variables declaration//GEN-END:variables
 }
