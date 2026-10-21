@@ -1,5 +1,4 @@
 package View;
-
 public class PhienDangNhap {
     public static String tenDangNhap;
     public static String hoTen;

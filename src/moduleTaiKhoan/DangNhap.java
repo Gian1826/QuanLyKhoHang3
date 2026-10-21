@@ -1,21 +1,18 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
-package View;
+package moduleTaiKhoan;
+import View.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import javax.swing.JOptionPane;
 
-/**
- *
- * @author HP
- */
-public class DangNhapFrame extends javax.swing.JFrame {
+public class DangNhap extends javax.swing.JFrame {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DangNhapFrame.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(DangNhap.class.getName());
 
     /**
      * Creates new form DangNhapFrame
      */
-    public DangNhapFrame() {
+    public DangNhap() {
         initComponents();
     }
 
@@ -31,14 +28,13 @@ public class DangNhapFrame extends javax.swing.JFrame {
         pnlNen = new javax.swing.JPanel();
         pnlThe = new javax.swing.JPanel();
         lblTieuDe = new javax.swing.JLabel();
-        txtTenDangNhap = new javax.swing.JTextField();
+        txtTenTaiKhoan = new javax.swing.JTextField();
         txtMatKhau = new javax.swing.JPasswordField();
         btnDangNhap = new javax.swing.JButton();
         btnTaoTK = new javax.swing.JButton();
         btnQuenMK = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setPreferredSize(new java.awt.Dimension(540, 540));
 
         pnlNen.setBorder(javax.swing.BorderFactory.createEmptyBorder(24, 24, 24, 24));
         pnlNen.setPreferredSize(new java.awt.Dimension(540, 540));
@@ -47,20 +43,22 @@ public class DangNhapFrame extends javax.swing.JFrame {
         lblTieuDe.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         lblTieuDe.setText("Đăng nhập");
 
-        txtTenDangNhap.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        txtTenTaiKhoan.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
 
         txtMatKhau.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        txtMatKhau.setText("jPasswordField1");
 
         btnDangNhap.setBackground(new java.awt.Color(255, 0, 0));
         btnDangNhap.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         btnDangNhap.setForeground(new java.awt.Color(255, 255, 255));
         btnDangNhap.setText("Đăng Nhập Ngay");
+        btnDangNhap.addActionListener(this::btnDangNhapActionPerformed);
 
         btnTaoTK.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnTaoTK.setText("Tạo tài khoản mới");
+        btnTaoTK.addActionListener(this::btnTaoTKActionPerformed);
 
         btnQuenMK.setText("Quên mật khẩu?");
+        btnQuenMK.addActionListener(this::btnQuenMKActionPerformed);
 
         javax.swing.GroupLayout pnlTheLayout = new javax.swing.GroupLayout(pnlThe);
         pnlThe.setLayout(pnlTheLayout);
@@ -75,7 +73,7 @@ public class DangNhapFrame extends javax.swing.JFrame {
                         .addGap(46, 46, 46)
                         .addGroup(pnlTheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txtMatKhau, javax.swing.GroupLayout.PREFERRED_SIZE, 397, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtTenDangNhap, javax.swing.GroupLayout.PREFERRED_SIZE, 397, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(txtTenTaiKhoan, javax.swing.GroupLayout.PREFERRED_SIZE, 397, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(pnlTheLayout.createSequentialGroup()
                         .addGap(127, 127, 127)
                         .addGroup(pnlTheLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -93,7 +91,7 @@ public class DangNhapFrame extends javax.swing.JFrame {
                 .addGap(30, 30, 30)
                 .addComponent(lblTieuDe)
                 .addGap(18, 18, 18)
-                .addComponent(txtTenDangNhap, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(txtTenTaiKhoan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(21, 21, 21)
                 .addComponent(txtMatKhau, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -123,9 +121,49 @@ public class DangNhapFrame extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    /**
-     * @param args the command line arguments
-     */
+    private void btnTaoTKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTaoTKActionPerformed
+    DangKy DK = new DangKy();
+    DK.setVisible(true);
+    this.dispose();
+    }//GEN-LAST:event_btnTaoTKActionPerformed
+
+    private void btnDangNhapActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDangNhapActionPerformed
+        try {
+        //lấy dữ liệu nhập
+        String TenTaiKhoan = txtTenTaiKhoan.getText();
+        //mật khẩu
+        String MatKhau = new String(txtMatKhau.getPassword());
+        //kết nối sql
+        Connection conn = KetNoiDB.getConnection();
+        String sql = "SELECT * FROM TaiKhoan Where TenTaikhoan = ? AND MatKhau = ?";
+        //Truyền tham số
+        PreparedStatement st = conn.prepareStatement(sql);
+        st.setString(1, TenTaiKhoan);
+        st.setString(2, MatKhau);
+        //thực hiện câu lệnh
+        ResultSet rs = st.executeQuery();
+        //kiểm tra
+        if(rs.next()){
+            Main M = new Main();
+            M.setVisible(true);
+            this.dispose();
+        }else{
+            JOptionPane.showMessageDialog(this, "Tên tài khoản hoặc mật khẩu không chính xác!");
+        }
+        rs.close();
+        st.close();
+        conn.close();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi:" + e.getMessage());
+        }
+    }//GEN-LAST:event_btnDangNhapActionPerformed
+
+    private void btnQuenMKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnQuenMKActionPerformed
+        QuenMatKhau QMK = new QuenMatKhau();
+        QMK.setVisible(true);
+        this.dispose();
+    }//GEN-LAST:event_btnQuenMKActionPerformed
+
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -145,7 +183,7 @@ public class DangNhapFrame extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new DangNhapFrame().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new DangNhap().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -156,6 +194,6 @@ public class DangNhapFrame extends javax.swing.JFrame {
     private javax.swing.JPanel pnlNen;
     private javax.swing.JPanel pnlThe;
     private javax.swing.JPasswordField txtMatKhau;
-    private javax.swing.JTextField txtTenDangNhap;
+    private javax.swing.JTextField txtTenTaiKhoan;
     // End of variables declaration//GEN-END:variables
 }

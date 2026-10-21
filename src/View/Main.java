@@ -1,11 +1,13 @@
 
 package View;
-public class MainFrame extends javax.swing.JFrame {
+import moduleNhapKho.ThongTinNhapPhieu;
+import moduleTaiKhoan.DangNhap;
+public class Main extends javax.swing.JFrame {
     
-    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(MainFrame.class.getName());
+    private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Main.class.getName());
 
     /**
-     * Creates new form MainFrame
+     * Creates new form ThongTinTaiKhoan
      */
         // ===== Màu sắc =====
     private final java.awt.Color BG      = new java.awt.Color(34, 45, 50);   // nền menu
@@ -15,7 +17,7 @@ public class MainFrame extends javax.swing.JFrame {
     private javax.swing.JButton dangChon;   // nút đang được chọn
     // private Viewdsphieunhap dsPhieu = new Viewdsphieunhap();   // bỏ // khi đã tạo panel này
 
-        public MainFrame() {
+        public Main() {
         initComponents();
         setSize(1200, 700);
         setLocationRelativeTo(null);
@@ -35,9 +37,9 @@ public class MainFrame extends javax.swing.JFrame {
         // Vùng nội dung bên phải: mỗi màn hình là một "card"
         pnlContent.setLayout(new java.awt.CardLayout());
         pnlContent.add(new javax.swing.JPanel(), "home");
-        pnlContent.add(new Viewnhaphang(), "lapphieu");
+        pnlContent.add(new ThongTinNhapPhieu(), "lapphieu");
         // pnlContent.add(dsPhieu, "dsphieu");
-        Viewtaikhoan tkPanel = new Viewtaikhoan();
+        moduleTaiKhoan.ThongTinTaiKhoan tkPanel = new moduleTaiKhoan.ThongTinTaiKhoan();
         pnlContent.add(tkPanel, "taikhoan");
 
         // Căn trái và gắn hiệu ứng rê chuột cho mọi nút
@@ -74,7 +76,7 @@ public class MainFrame extends javax.swing.JFrame {
         if (c == javax.swing.JOptionPane.YES_OPTION) {
             PhienDangNhap.xoa();
             dispose();
-            new DangNhapFrame().setVisible(true);
+            new DangNhap().setVisible(true);
         }
     }
 
@@ -234,6 +236,7 @@ public class MainFrame extends javax.swing.JFrame {
         btnLapPhieu.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         btnLapPhieu.setMaximumSize(new java.awt.Dimension(32767, 34));
         btnLapPhieu.setOpaque(true);
+        btnLapPhieu.addActionListener(this::btnLapPhieuActionPerformed);
         pnlNhapKho.add(btnLapPhieu);
 
         btnDSPhieu.setBackground(new java.awt.Color(44, 59, 65));
@@ -372,6 +375,7 @@ public class MainFrame extends javax.swing.JFrame {
         btnDangXuat.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         btnDangXuat.setMaximumSize(new java.awt.Dimension(32767, 34));
         btnDangXuat.setOpaque(true);
+        btnDangXuat.addActionListener(this::btnDangXuatActionPerformed);
         pnlItems.add(btnDangXuat);
 
         pnlMenu.add(pnlItems, java.awt.BorderLayout.CENTER);
@@ -402,11 +406,19 @@ public class MainFrame extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnTaiKhoanActionPerformed
 
+    private void btnLapPhieuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLapPhieuActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnLapPhieuActionPerformed
+
+    private void btnDangXuatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDangXuatActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnDangXuatActionPerformed
+
     /**
      * @param args the command line arguments
      */
         public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(() -> new MainFrame().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new Main().setVisible(true));
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
