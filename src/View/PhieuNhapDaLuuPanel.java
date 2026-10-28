@@ -99,12 +99,12 @@ public class PhieuNhapDaLuuPanel extends javax.swing.JPanel {
         jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel4.setText("Nhà Cung Cấp");
 
-        cbNhaCungCap.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cbNhaCungCap.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Nhà Cung Cấp Gạo", "Nhà Cung Cấp Bột Mì", "Nhà Cung Cấp Sữa", "Nhà Cung Cấp Đồ Ăn", "Nhà Cung Cấp Trứng" }));
 
         jLabel5.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel5.setText("Trạng Thái");
 
-        cbTrangThai.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cbTrangThai.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Đã Lưu", "Nháp", "Đã Hủy" }));
 
         btnTimKiem.setBackground(new java.awt.Color(51, 51, 255));
         btnTimKiem.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -124,20 +124,20 @@ public class PhieuNhapDaLuuPanel extends javax.swing.JPanel {
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null},
-                {null, null, null, null, null}
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null},
+                {null, null, null, null, null, null}
             },
             new String [] {
-                "Mã Phiếu", "Ngày", "Nhà Cung Cấp", "Người lập", "Tổng tiền"
+                "Mã Phiếu", "Ngày", "Nhà Cung Cấp", "Người lập", "Tổng tiền", "Trạng thái"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Double.class, java.lang.String.class
             };
             boolean[] canEdit = new boolean [] {
-                false, false, false, false, false
+                false, false, false, false, false, false
             };
 
             public Class getColumnClass(int columnIndex) {

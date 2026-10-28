@@ -44,7 +44,7 @@ public class TaiKhoanController {
                 JOptionPane.showMessageDialog(view, "Vui lòng nhập đầy đủ thông tin cá nhân!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            boolean thanhCong = TaiKhoanDAO.ThemThongTin(hoTen, email, soDienThoai);
+            boolean thanhCong = TaiKhoanDAO.capNhatThongTin(tenDangNhap, hoTen, email, soDienThoai);
 
             if (thanhCong) {
                 JOptionPane.showMessageDialog(view, "Cập nhật thông tin thành công!");

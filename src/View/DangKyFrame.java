@@ -152,7 +152,7 @@ public class DangKyFrame extends javax.swing.JFrame {
             return;
         }
         Connection conn = KetNoiDB.getConnection();
-        String sql = "INSERT INTO TaiKhoan (TenTaiKhoan, MatKhau , Email) VALUES (?,?,?)";
+        String sql = "INSERT INTO TaiKhoan (TenDangNhap, MatKhau , Email) VALUES (?,?,?)";
         PreparedStatement st = conn.prepareStatement(sql);
         st.setString(1, TenTaiKhoan);
         st.setString(2, MatKhau);

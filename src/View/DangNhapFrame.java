@@ -1,6 +1,6 @@
 package View;
-import View.DangKyFrame;
 import Model.KetNoiDB;
+import Model.PhienDangNhap;
 import View.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -137,7 +137,7 @@ public class DangNhapFrame extends javax.swing.JFrame {
         String MatKhau = new String(txtMatKhau.getPassword());
         //kết nối sql
         Connection conn = KetNoiDB.getConnection();
-        String sql = "SELECT * FROM TaiKhoan Where TenTaikhoan = ? AND MatKhau = ?";
+        String sql = "SELECT * FROM TaiKhoan Where TenDangNhap = ? AND MatKhau = ?";
         //Truyền tham số
         PreparedStatement st = conn.prepareStatement(sql);
         st.setString(1, TenTaiKhoan);
@@ -146,11 +146,14 @@ public class DangNhapFrame extends javax.swing.JFrame {
         ResultSet rs = st.executeQuery();
         //kiểm tra
         if(rs.next()){
+            PhienDangNhap.tenDangNhap = rs.getString("TenDangNhap");
+            PhienDangNhap.hoTen = rs.getString("HoTen");
+            PhienDangNhap.vaiTro = rs.getString("VaiTro");
             Main M = new Main();
             M.setVisible(true);
             this.dispose();
         }else{
-            JOptionPane.showMessageDialog(this, "Tên tài khoản hoặc mật khẩu không chính xác!");
+            JOptionPane.showMessageDialog(this, "Tên dang nhap hoặc mật khẩu không chính xác!");
         }
         rs.close();
         st.close();
@@ -167,24 +170,6 @@ public class DangNhapFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_btnQuenMKActionPerformed
 
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new DangNhapFrame().setVisible(true));
     }
 

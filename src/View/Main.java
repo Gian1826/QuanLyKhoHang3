@@ -79,7 +79,9 @@ public class Main extends javax.swing.JFrame {
         PhieuNhapController pnController = new PhieuNhapController(pnView);
         themTrang("lapphieunhap",    btnLapPhieu,    pnView);
         //danh sách phiếu nhập
-        themTrang("dsphieunhap",     btnDSPhieu,     new PhieuNhapDaLuuPanel());
+        PhieuNhapDaLuuPanel dsView = new PhieuNhapDaLuuPanel();
+        new PhieuNhapDaLuuController(dsView);
+        themTrang("dsphieunhap",     btnDSPhieu,     dsView);
         // --- Lưu trữ ---
         themTrang("sodokho",     btnSoDoViTriKho,    new SoDoKhoPanel());
         themTrang("cathang",     btnCatHangVaoViTri, new CatVaoViTriPanel());

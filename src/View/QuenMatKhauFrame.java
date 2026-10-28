@@ -143,13 +143,13 @@ public class QuenMatKhauFrame extends javax.swing.JFrame {
                 return;
             }
         Connection conn = KetNoiDB.getConnection();
-        String sqlCheck = "SELECT COUNT(*) FROM TaiKhoan WHERE TenTaiKhoan = ? AND Email = ?";
+        String sqlCheck = "SELECT COUNT(*) FROM TaiKhoan WHERE TenDangNhap = ? AND Email = ?";
         PreparedStatement st = conn.prepareStatement(sqlCheck);
         st.setString(1, TenDangNhap);
         st.setString(2, Email);
         ResultSet rs = st.executeQuery();
         if (rs.next() && rs.getInt(1) > 0){
-            String sqlU ="UPDATE TaiKhoan SET MatKhau = ? WHERE TentaiKhoan = ? AND Email = ?";
+            String sqlU ="UPDATE TaiKhoan SET MatKhau = ? WHERE TenDangNhap = ? AND Email = ?";
             PreparedStatement stU = conn.prepareStatement(sqlU);
             stU.setString(1, NhapLaiMatKhau);
             stU.setString(2, TenDangNhap);
@@ -174,24 +174,6 @@ public class QuenMatKhauFrame extends javax.swing.JFrame {
      * @param args the command line arguments
      */
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
-            logger.log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new QuenMatKhauFrame().setVisible(true));
     }
 

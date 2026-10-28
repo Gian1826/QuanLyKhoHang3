@@ -10,22 +10,7 @@ import javax.swing.JPasswordField;
 public class ThongTinTaiKhoanPanel extends javax.swing.JPanel {   
         public ThongTinTaiKhoanPanel() {
         initComponents();
-        /*napThongTin();
-        try {
-            Connection conn = KetNoiDB.getConnection();
-            String sql = "SELECT TOP 1 TenTaiKhoan FROM TaiKhoan";
-            PreparedStatement st = conn.prepareStatement(sql);
-            ResultSet rs = st.executeQuery();
-            if(rs.next()){
-                String TenTaiKhoan = rs.getString("TenTaiKhoan");
-                txtTenDangNhap.setText(TenTaiKhoan);
-            }
-            rs.close();
-            st.close();
-            conn.close();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Loi:" + e.getMessage());
-        }*/
+        napThongTin();
     }
         public javax.swing.JTextField getTxtTenDangNhap(){
             return txtTenDangNhap;
@@ -57,19 +42,42 @@ public class ThongTinTaiKhoanPanel extends javax.swing.JPanel {
         public javax.swing.JButton getDoiMatKhau(){
             return btnDoiMatKhau;
         }
-    // Gọi mỗi lần mở màn hình để hiện thông tin mới nhất
-    /*public void napThongTin() {
-        txtTenDangNhap.setText(PhienDangNhap.tenDangNhap);
-        txtHoVaTen.setText(PhienDangNhap.hoTen);
-        if("Admin".equalsIgnoreCase(PhienDangNhap.vaiTro)){
-            txtVaiTro.setText("Quản trị viên");
-        } else {
-            txtVaiTro.setText("Nhân viên");
+        public void napThongTin() {
+        String ten = PhienDangNhap.tenDangNhap;
+        String hoTen = PhienDangNhap.hoTen;
+    boolean laAdmin = "admin".equalsIgnoreCase(PhienDangNhap.vaiTro);
+    String tenVaiTro = laAdmin ? "Quản trị viên" : "Nhân viên";
+
+    // Avatar: 2 chữ cái đầu của tên đăng nhập
+    if (ten != null && !ten.isEmpty()) {
+        jLabel1.setText(ten.substring(0, Math.min(2, ten.length())).toUpperCase());
+    }
+    jLabel2.setText(ten);
+    jLabel3.setText(tenVaiTro);
+
+    txtTenDangNhap.setText(ten);
+    txtVaiTro.setText(tenVaiTro);
+    txtHoVaTen.setText(hoTen);
+
+    // Lấy thêm Email, SĐT từ DB
+    try (Connection conn = KetNoiDB.getConnection();
+         PreparedStatement ps = conn.prepareStatement(
+             "SELECT HoTen, Email, SoDienThoai FROM TaiKhoan WHERE TenDangNhap = ?")) {
+        ps.setString(1, ten);
+        try (ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                txtHoVaTen.setText(rs.getString("HoTen"));
+                txtEmail.setText(rs.getString("Email") == null ? "" : rs.getString("Email"));
+                txtSoDienThoai.setText(rs.getString("SoDienThoai") == null ? "" : rs.getString("SoDienThoai"));
+            }
         }
-        txtTenDangNhap.setEditable(false);
-        txtHoVaTen.setEditable(false);
-        txtVaiTro.setEditable(false);
-    }*/
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    txtTenDangNhap.setEditable(false); // tên đăng nhập là khóa, không cho sửa
+    txtVaiTro.setEditable(false);
+}
 
     
     @SuppressWarnings("unchecked")
@@ -143,7 +151,6 @@ public class ThongTinTaiKhoanPanel extends javax.swing.JPanel {
         jLabel4.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         jLabel4.setText("Tên đăng nhập");
 
-        txtTenDangNhap.setEditable(false);
         txtTenDangNhap.setColumns(30);
         txtTenDangNhap.setText("admin");
 
@@ -203,16 +210,16 @@ public class ThongTinTaiKhoanPanel extends javax.swing.JPanel {
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(pwMatKhauHientai, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel10))
+                    .addComponent(jLabel10)
+                    .addComponent(pwMatKhauHientai, javax.swing.GroupLayout.PREFERRED_SIZE, 260, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(pwMatKhauMoi, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel11))
+                    .addComponent(jLabel11)
+                    .addComponent(pwMatKhauMoi, javax.swing.GroupLayout.PREFERRED_SIZE, 260, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel12)
-                    .addComponent(pwXacNhanMatKhauMoi, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(pwXacNhanMatKhauMoi, javax.swing.GroupLayout.PREFERRED_SIZE, 260, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addComponent(btnDoiMatKhau)
@@ -269,7 +276,7 @@ public class ThongTinTaiKhoanPanel extends javax.swing.JPanel {
                             .addComponent(jLabel9)
                             .addComponent(txtSoDienThoai, javax.swing.GroupLayout.PREFERRED_SIZE, 344, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(btnLuuThongTin))
-                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                        .addContainerGap(54, Short.MAX_VALUE))))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -307,7 +314,7 @@ public class ThongTinTaiKhoanPanel extends javax.swing.JPanel {
                 .addComponent(btnLuuThongTin)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(89, Short.MAX_VALUE))
+                .addContainerGap(44, Short.MAX_VALUE))
         );
 
         add(jPanel1, java.awt.BorderLayout.CENTER);
