@@ -3,83 +3,95 @@ package Model;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import javax.swing.table.DefaultTableModel;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PhieuXuatDaLuuDAO {
 
-    public void layDanhSachPhieuXuat(String tuNgay, String denNgay, String khachHang, String trangThai, DefaultTableModel model) {
+    private static final DateTimeFormatter DMY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    public String loiCuoi = "";
+
+    // Danh sách tên khách hàng cho combobox lọc
+    public List<String> layDanhSachKhachHang() {
+        List<String> ds = new ArrayList<>();
+        String sql = "SELECT TenKH FROM KhachHang ORDER BY TenKH";
+        try (Connection conn = KetNoiDB.getConnection(); PreparedStatement pst = conn.prepareStatement(sql); ResultSet rs = pst.executeQuery()) {
+            while (rs.next()) {
+                ds.add(rs.getString(1));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ds;
+    }
+
+    /**
+     * Tìm phiếu xuất theo bộ lọc. Tham số nào null thì bỏ qua. tuNgay/denNgay:
+     * yyyy-MM-dd. trangThai: 0 nháp, 1 đã lưu, 2 đã hủy. Mỗi dòng: {maPhieu,
+     * ngay (dd/MM/yyyy), tenKH, nguoiLap, tongTien, trangThai}
+     */
+    public List<Object[]> timKiem(String tuNgay, String denNgay, String tenKH, Integer trangThai) {
+        List<Object[]> ds = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT p.MaPhieuXuat, p.NgayXuat, p.MaKH, t.TenDangNhap, p.TongTien, p.TrangThai " +
-            "FROM PhieuXuat p " +
-            "LEFT JOIN TaiKhoan t ON p.MaTaiKhoan = t.MaTaiKhoan " +
-            "WHERE 1=1 "
-        );
+                "SELECT p.MaPhieuXuat, p.NgayXuat, k.TenKH, t.TenDangNhap, p.TongTien, p.TrangThai "
+                + "FROM PhieuXuat p "
+                + "LEFT JOIN KhachHang k ON p.MaKH = k.MaKH "
+                + "LEFT JOIN TaiKhoan t ON p.MaTaiKhoan = t.MaTaiKhoan "
+                + "WHERE 1 = 1 ");
+        List<Object> params = new ArrayList<>();
 
-        if (tuNgay != null && !tuNgay.isEmpty()) {
-            sql.append(" AND CAST(p.NgayXuat AS DATE) >= ? ");
+        if (tuNgay != null && !tuNgay.trim().isEmpty()) {
+            sql.append("AND p.NgayXuat >= ? ");
+            params.add(java.sql.Date.valueOf(tuNgay.trim()));
         }
-        if (denNgay != null && !denNgay.isEmpty()) {
-            sql.append(" AND CAST(p.NgayXuat AS DATE) <= ? ");
+        if (denNgay != null && !denNgay.trim().isEmpty()) {
+            sql.append("AND p.NgayXuat <= ? ");
+            params.add(java.sql.Date.valueOf(denNgay.trim()));
         }
-        if (khachHang != null && !khachHang.equals("Tất cả")) {
-            sql.append(" AND p.MaKH = ? ");
+        if (tenKH != null && !tenKH.trim().isEmpty()) {
+            sql.append("AND k.TenKH = ? ");
+            params.add(tenKH.trim());
         }
-
-        Integer ttId = null;
         if (trangThai != null) {
-            if (trangThai.equals("Nháp")) ttId = 0;
-            else if (trangThai.equals("Đã lưu")) ttId = 1;
-            else if (trangThai.equals("Đã hủy")) ttId = 2;
+            sql.append("AND p.TrangThai = ? ");
+            params.add(trangThai);
         }
+        sql.append("ORDER BY p.NgayXuat DESC, p.MaPhieuXuat DESC");
 
-        if (ttId != null) {
-            sql.append(" AND p.TrangThai = ? ");
-        }
-
-        sql.append(" ORDER BY p.NgayXuat DESC");
-
-        try (Connection conn = KetNoiDB.getConnection();
-             PreparedStatement pst = conn.prepareStatement(sql.toString())) {
-            
-            int paramIndex = 1;
-            if (tuNgay != null && !tuNgay.isEmpty()) pst.setString(paramIndex++, tuNgay);
-            if (denNgay != null && !denNgay.isEmpty()) pst.setString(paramIndex++, denNgay);
-            if (khachHang != null && !khachHang.equals("Tất cả")) pst.setString(paramIndex++, khachHang);
-            if (ttId != null) pst.setInt(paramIndex++, ttId);
-
+        try (Connection conn = KetNoiDB.getConnection(); PreparedStatement pst = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                pst.setObject(i + 1, params.get(i));
+            }
             try (ResultSet rs = pst.executeQuery()) {
-                model.setRowCount(0);
                 while (rs.next()) {
-                    String tenTrangThai = "";
-                    switch (rs.getInt("TrangThai")) {
-                        case 0: tenTrangThai = "Nháp"; break;
-                        case 1: tenTrangThai = "Đã lưu"; break;
-                        case 2: tenTrangThai = "Đã hủy"; break;
-                    }
-
-                    model.addRow(new Object[]{
+                    ds.add(new Object[]{
                         rs.getString("MaPhieuXuat"),
-                        rs.getDate("NgayXuat"),
-                        rs.getString("MaKH"),
+                        rs.getDate("NgayXuat").toLocalDate().format(DMY),
+                        rs.getString("TenKH"),
                         rs.getString("TenDangNhap"),
-                        String.format("%,.0f", rs.getDouble("TongTien")),
-                        tenTrangThai
+                        rs.getDouble("TongTien"),
+                        rs.getInt("TrangThai")
                     });
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+            loiCuoi = e.getMessage();
         }
+        return ds;
     }
 
-    public boolean huyPhieuXuat(String maPhieu) {
-        String sql = "UPDATE PhieuXuat SET TrangThai = 2 WHERE MaPhieuXuat = ?";
-        try (Connection conn = KetNoiDB.getConnection();
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+    // Hủy phiếu: chuyển TrangThai = 2 (chưa hủy thì mới hủy được)
+    public boolean huyPhieu(String maPhieu) {
+        String sql = "UPDATE PhieuXuat SET TrangThai = 2 WHERE MaPhieuXuat = ? AND TrangThai IN (0, 1)";
+        try (Connection conn = KetNoiDB.getConnection(); PreparedStatement pst = conn.prepareStatement(sql)) {
             pst.setString(1, maPhieu);
-            return pst.executeUpdate() > 0;
+            return pst.executeUpdate() == 1;
         } catch (Exception e) {
             e.printStackTrace();
+            loiCuoi = e.getMessage();
             return false;
         }
     }

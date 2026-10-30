@@ -1,6 +1,7 @@
 package Model;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -11,80 +12,103 @@ public class LichSuKiemKeDAO {
 
     public List<String> layDanhSachKhu() {
         List<String> list = new ArrayList<>();
-        String sql = "SELECT MaKhu FROM Khu";
+        String sql = "SELECT MaKhu FROM Khu ORDER BY MaKhu";
         try (Connection conn = KetNoiDB.getConnection();
              PreparedStatement pst = conn.prepareStatement(sql);
              ResultSet rs = pst.executeQuery()) {
-            while (rs.next()) {
-                list.add(rs.getString("MaKhu"));
-            }
+            while (rs.next()) list.add(rs.getString("MaKhu"));
         } catch (Exception e) {
             e.printStackTrace();
         }
         return list;
     }
-
-    public void layDanhSachPhieuKiemKe(String tuNgay, String denNgay, String khu, String trangThai, DefaultTableModel model) {
+    public String layHoTen(String tenDangNhap) {
+    try (Connection c = KetNoiDB.getConnection();
+         PreparedStatement p = c.prepareStatement("SELECT HoTen FROM TaiKhoan WHERE TenDangNhap = ?")) {
+        p.setString(1, tenDangNhap);
+        try (ResultSet rs = p.executeQuery()) {
+            if (rs.next() && rs.getString(1) != null) return rs.getString(1).trim();
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return "";
+    }
+    /** tuNgay / denNgay có thể null (không lọc). */
+    public void layDanhSachPhieuKiemKe(Date tuNgay, Date denNgay, String khu, String trangThai,
+                                       DefaultTableModel model) throws Exception {
         StringBuilder sql = new StringBuilder(
-            "SELECT p.MaPhieuKiemKe, p.NgayKiemKe, p.MaKhu, t.TenDangNhap, " +
-            "(SELECT COUNT(MaSanPham) FROM ChiTietKiemKe WHERE MaPhieuKiemKe = p.MaPhieuKiemKe AND (SoLuongThucTe - SoLuongHeThong) <> 0) AS MatHangLech, p.TrangThai " +
-            "FROM PhieuKiemKe p " +
-            "LEFT JOIN TaiKhoan t ON p.MaTaiKhoan = t.MaTaiKhoan " +
-            "WHERE 1=1 "
-        );
+            "SELECT p.MaPhieuKiemKe, p.NgayKiemKe, p.MaKhu, " +
+            "COALESCE(NULLIF(LTRIM(RTRIM(t.HoTen)), N''), t.TenDangNhap) AS NguoiKiemKe, " +
+            "(SELECT COUNT(*) FROM ChiTietKiemKe c WHERE c.MaPhieuKiemKe = p.MaPhieuKiemKe " +
+            " AND c.SoLuongThucTe <> c.SoLuongHeThong) AS MatHangLech, p.TrangThai " +
+            "FROM PhieuKiemKe p LEFT JOIN TaiKhoan t ON p.MaTaiKhoan = t.MaTaiKhoan WHERE 1=1 ");
 
-        if (tuNgay != null && !tuNgay.isEmpty()) {
-            sql.append(" AND CAST(p.NgayKiemKe AS DATE) >= ? ");
-        }
-        if (denNgay != null && !denNgay.isEmpty()) {
-            sql.append(" AND CAST(p.NgayKiemKe AS DATE) <= ? ");
-        }
-        if (khu != null && !khu.equals("Tất cả")) {
-            sql.append(" AND p.MaKhu = ? ");
-        }
+        if (tuNgay != null)  sql.append(" AND CAST(p.NgayKiemKe AS DATE) >= ? ");
+        if (denNgay != null) sql.append(" AND CAST(p.NgayKiemKe AS DATE) <= ? ");
+        boolean locKhu = khu != null && !khu.equals("Tất cả");
+        if (locKhu) sql.append(" AND p.MaKhu = ? ");
 
         Integer ttId = null;
-        if (trangThai != null) {
-            if (trangThai.equals("Nháp")) ttId = 0;
-            else if (trangThai.equals("Hoàn tất")) ttId = 1;
-        }
-
-        if (ttId != null) {
-            sql.append(" AND p.TrangThai = ? ");
-        }
+        if ("Nháp".equals(trangThai)) ttId = 0;
+        else if ("Hoàn tất".equals(trangThai)) ttId = 1;
+        if (ttId != null) sql.append(" AND p.TrangThai = ? ");
 
         sql.append(" ORDER BY p.NgayKiemKe DESC");
 
         try (Connection conn = KetNoiDB.getConnection();
              PreparedStatement pst = conn.prepareStatement(sql.toString())) {
-            
-            int paramIndex = 1;
-            if (tuNgay != null && !tuNgay.isEmpty()) pst.setString(paramIndex++, tuNgay);
-            if (denNgay != null && !denNgay.isEmpty()) pst.setString(paramIndex++, denNgay);
-            if (khu != null && !khu.equals("Tất cả")) pst.setString(paramIndex++, khu);
-            if (ttId != null) pst.setInt(paramIndex++, ttId);
+            int i = 1;
+            if (tuNgay != null)  pst.setDate(i++, tuNgay);
+            if (denNgay != null) pst.setDate(i++, denNgay);
+            if (locKhu)          pst.setString(i++, khu);
+            if (ttId != null)    pst.setInt(i++, ttId);
 
             try (ResultSet rs = pst.executeQuery()) {
                 model.setRowCount(0);
                 while (rs.next()) {
-                    String tenTrangThai = "";
-                    switch (rs.getInt("TrangThai")) {
-                        case 0: tenTrangThai = "Nháp"; break;
-                        case 1: tenTrangThai = "Hoàn tất"; break;
-                    }
-
                     model.addRow(new Object[]{
                         rs.getString("MaPhieuKiemKe"),
                         rs.getDate("NgayKiemKe"),
                         rs.getString("MaKhu"),
-                        rs.getString("TenDangNhap"),
+                        rs.getString("NguoiKiemKe"),
                         rs.getInt("MatHangLech"),
-                        tenTrangThai
+                        rs.getInt("TrangThai") == 1 ? "Hoàn tất" : "Nháp"
                     });
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+    }
+
+    /** Chi tiết một phiếu: STT, Mã SP, Tên SP, Vị trí, SL hệ thống, SL thực tế, Chênh lệch. */
+    public void layChiTietPhieu(String maPhieu, DefaultTableModel model) throws Exception {
+        String sql = "SELECT c.MaSanPham, s.TenSanPham, c.MaViTri, c.SoLuongHeThong, c.SoLuongThucTe " +
+                     "FROM ChiTietKiemKe c JOIN SanPham s ON c.MaSanPham = s.MaSanPham " +
+                     "WHERE c.MaPhieuKiemKe = ? ORDER BY c.MaViTri, c.MaSanPham";
+        try (Connection conn = KetNoiDB.getConnection();
+             PreparedStatement pst = conn.prepareStatement(sql)) {
+            pst.setString(1, maPhieu);
+            try (ResultSet rs = pst.executeQuery()) {
+                model.setRowCount(0);
+                int stt = 1;
+                while (rs.next()) {
+                    int ht = rs.getInt(4), tt = rs.getInt(5);
+                    model.addRow(new Object[]{stt++, rs.getString(1), rs.getString(2),
+                        rs.getString(3), ht, tt, tt - ht});
+                }
+            }
+        }
+    }
+
+    public String layGhiChu(String maPhieu) throws Exception {
+        try (Connection conn = KetNoiDB.getConnection();
+             PreparedStatement pst = conn.prepareStatement(
+                 "SELECT GhiChu FROM PhieuKiemKe WHERE MaPhieuKiemKe = ?")) {
+            pst.setString(1, maPhieu);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next() && rs.getString(1) != null) return rs.getString(1);
+            }
+        }
+        return "";
     }
 }

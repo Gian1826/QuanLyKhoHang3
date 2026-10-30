@@ -6,7 +6,14 @@ import java.sql.ResultSet;
 import javax.swing.table.DefaultTableModel;
 
 public class DanhSachLayHangDAO {
-
+    public int layMaTaiKhoan(String tenDangNhap) {
+    try (Connection c = KetNoiDB.getConnection();
+         PreparedStatement p = c.prepareStatement("SELECT MaTaiKhoan FROM TaiKhoan WHERE TenDangNhap = ?")) {
+        p.setString(1, tenDangNhap);
+        ResultSet rs = p.executeQuery();
+        return rs.next() ? rs.getInt(1) : -1;
+    } catch (Exception e) { return -1; }
+}
     // Lấy danh sách lệnh lấy hàng (kết hợp với chi tiết lệnh và sản phẩm)
     public void timKiemDanhSachLayHang(String ngay, String khu, String trangThai, DefaultTableModel model) {
         // Build câu SQL linh hoạt dựa trên bộ lọc
@@ -24,6 +31,7 @@ public class DanhSachLayHangDAO {
         if (trangThai.equals("Chờ lấy")) ttId = 0;
         else if (trangThai.equals("Đang lấy")) ttId = 1;
         else if (trangThai.equals("Hoàn thành")) ttId = 2;
+        else if (trangThai.equals("Đã hủy")) ttId = 3; 
 
         if (ngay != null && !ngay.isEmpty()) {
             sql.append(" AND CAST(l.NgayTao AS DATE) = ? ");
@@ -70,7 +78,7 @@ public class DanhSachLayHangDAO {
             e.printStackTrace();
         }
     }
-
+    
     // Cập nhật trạng thái lệnh lấy hàng (0 -> 1 hoặc 1 -> 2)
     public boolean capNhatTrangThaiLenh(String maLenh, int trangThaiMoi, int maNguoiLay) {
         String sql = "UPDATE LenhLayHang SET TrangThai = ?, MaNguoiLay = ? ";

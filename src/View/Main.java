@@ -1,65 +1,60 @@
 
 package View;
-import Controller.PhieuNhapController;
-import Controller.TaiKhoanController;
-import Model.PhienDangNhap;
 import Model.*;
 import View.*;
 import Controller.*;
-public class Main extends javax.swing.JFrame {
-    
+public class Main extends javax.swing.JFrame {   
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(Main.class.getName());
     private final java.awt.Color BG      = new java.awt.Color(34, 45, 50);   
     private final java.awt.Color BG_SUB  = new java.awt.Color(44, 59, 65);   
     private final java.awt.Color BG_CHON = new java.awt.Color(30, 40, 44);   
 
     private javax.swing.JButton dangChon;
-    private javax.swing.JPanel[] panelCon;  
-
-        public Main() {
+    private javax.swing.JPanel[] panelCon;
+    public Main() {
         initComponents();
-    javax.swing.JButton[] nutCha = {
-        btnNhapKho, btnLuuTru, btnLayHang, btnXuatKho,
-        btnHoanTra, btnKiemKe, btnBaoCao, btnTaiKhoan
-    };
-    panelCon = new javax.swing.JPanel[]{
-        pnlNhapKho, pnlLuuTru, pnlLayHang, pnlXuatKho,
-        pnlHoanTra, pnlKiemKe, pnlBaoCao, pnlTaiKhoan
-    };
-    for (int i = 0; i < nutCha.length; i++) {
-        final javax.swing.JPanel p = panelCon[i];
-        nutCha[i].setBackground(BG);                 // sửa nền các nút cha đang bị sai màu
-        p.setBackground(BG_SUB);
-        p.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
-        p.setVisible(false);                         // thu gọn mặc định
-        nutCha[i].addActionListener(e -> toggle(p)); // bấm để mở/đóng
-    }
+        javax.swing.JButton[] nutCha = {
+            btnNhapKho, btnLuuTru, btnLayHang, btnXuatKho,
+            btnHoanTra, btnKiemKe, btnBaoCao, btnTaiKhoan
+        };
+        panelCon = new javax.swing.JPanel[]{
+            pnlNhapKho, pnlLuuTru, pnlLayHang, pnlXuatKho,
+            pnlHoanTra, pnlKiemKe, pnlBaoCao, pnlTaiKhoan
+        };
+        for (int i = 0; i < nutCha.length; i++) {
+            final javax.swing.JPanel p = panelCon[i];
+            nutCha[i].setBackground(BG);
+            p.setBackground(BG_SUB);
+            p.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+            p.setVisible(false);                         // thu gọn mặc định
+            nutCha[i].addActionListener(e -> toggle(p)); // bấm để mở/đóng
+        }
 
-    // ===== Nút con: nền, opaque, căn trái =====
-    javax.swing.JButton[] nutCon = {
-        btnLapPhieu, btnDSPhieu,
-        btnCatHangVaoViTri, btnSoDoViTriKho, btnChuyenViTri,
-        btnDanhSachLayHang, btnLichSuLayHang,
-        btnLapPhieuXuat, btnPhieuXuatDaLuu,
-        btnLapPhieuHoanTra, btnPhieuHoanTraDaLuu,
-        btnLapPhieuKiemKe, btnLichSuKiemKe,
-        btnBaoCaoTonKho, btnBaoCaoNhapXuat, btnBaoCaoHangSapHet,
-        btnTaiKhoanCuaToi, btnDangXuat
-    };
-    for (javax.swing.JButton b : nutCon) {
-        b.setBackground(BG_SUB);
-        b.setOpaque(true);
-    }
-    java.util.List<javax.swing.JButton> tatCa = new java.util.ArrayList<>();
-    tatCa.add(btnTrangChu);
-    tatCa.addAll(java.util.Arrays.asList(nutCha));
-    tatCa.addAll(java.util.Arrays.asList(nutCon));
-    for (javax.swing.JButton b : tatCa) {
-    b.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
-    themHover(b);
-}
+        // ===== Nút con: nền, opaque, căn trái =====
+        javax.swing.JButton[] nutCon = {
+            btnLapPhieu, btnDSPhieu,
+            btnCatHangVaoViTri, btnSoDoViTriKho, btnChuyenViTri,
+            btnDanhSachLayHang, btnLichSuLayHang,
+            btnLapPhieuXuat, btnPhieuXuatDaLuu,
+            btnLapPhieuHoanTra, btnPhieuHoanTraDaLuu,
+            btnLapPhieuKiemKe, btnLichSuKiemKe,
+            btnBaoCaoTonKho, btnBaoCaoNhapXuat, btnBaoCaoHangSapHet,
+            btnTaiKhoanCuaToi, btnDangXuat
+        };
+        for (javax.swing.JButton b : nutCon) {
+            b.setBackground(BG_SUB);
+            b.setOpaque(true);
+        }
+        java.util.List<javax.swing.JButton> tatCa = new java.util.ArrayList<>();
+        tatCa.add(btnTrangChu);
+        tatCa.addAll(java.util.Arrays.asList(nutCha));
+        tatCa.addAll(java.util.Arrays.asList(nutCon));
+        for (javax.swing.JButton b : tatCa) {
+            b.setAlignmentX(java.awt.Component.LEFT_ALIGNMENT);
+            themHover(b);
+        }
         setSize(1200, 700);
-            setTitle("Quản Lý Kho Hàng");
+        setTitle("Quản Lý Kho Hàng");
         setLocationRelativeTo(null);
 
         // Hiện thông tin người đăng nhập ở header
@@ -67,64 +62,113 @@ public class Main extends javax.swing.JFrame {
         lblTen.setText(ten);
         lblTen.setToolTipText(PhienDangNhap.hoTen);
         lblAvatar.setText(ten.substring(0, Math.min(2, ten.length())).toUpperCase());
+
         // Vùng nội dung bên phải: mỗi màn hình là một "card"
         pnlContent.setLayout(new java.awt.CardLayout());
-        //Trang chủ
+
+        // Trang chủ
         TrangChuPanel trangChu = new TrangChuPanel();
-        pnlContent.add(new TrangChuPanel(), "home");
-        themTrang("home", btnTrangChu, new TrangChuPanel());
-        //Nhập kho
-        //Lập phiếu nhập
+        themTrang("home", btnTrangChu, trangChu, trangChu::napDuLieu);
+
+        // --- Nhập kho ---
         PhieuNhapPanel pnView = new PhieuNhapPanel();
-        PhieuNhapController pnController = new PhieuNhapController(pnView);
-        themTrang("lapphieunhap",    btnLapPhieu,    pnView);
-        //danh sách phiếu nhập
+        new PhieuNhapController(pnView);
+        themTrang("lapphieunhap", btnLapPhieu, pnView);
+
         PhieuNhapDaLuuPanel dsView = new PhieuNhapDaLuuPanel();
         new PhieuNhapDaLuuController(dsView);
-        themTrang("dsphieunhap",     btnDSPhieu,     dsView);
-        // --- Lưu trữ ---
-        themTrang("sodokho",     btnSoDoViTriKho,    new SoDoKhoPanel());
-        themTrang("cathang",     btnCatHangVaoViTri, new CatVaoViTriPanel());
-        themTrang("chuyenvitri", btnChuyenViTri,     new ChuyenViTriPanel());
-        // --- Lấy hàng ---
-        themTrang("dslayhang", btnDanhSachLayHang, new DanhSachLayHangPanel());
-        themTrang("lslayhang", btnLichSuLayHang,   new LichSuLayHangPanel());
-        // --- Xuất kho ---
-        themTrang("lapphieuxuat", btnLapPhieuXuat,    new LapPhieuXuatPanel());
-        themTrang("dsphieuxuat",  btnPhieuXuatDaLuu,  new PhieuXuatDaLuuPanel());
-        // --- Hoàn trả ---
-        themTrang("lapphieuhoantra", btnLapPhieuHoanTra,     new PhieuHoanTraPanel());
-        themTrang("dsphieuhoantra",  btnPhieuHoanTraDaLuu,   new PhieuHoanTraDaLuuPanel());
-        // --- Kiểm kê ---
-        themTrang("lapphieukiemke", btnLapPhieuKiemKe, new PhieuKiemKePanel());
-        themTrang("lskiemke",       btnLichSuKiemKe,   new LichSuKiemKePanel());
-        // --- Báo cáo ---
-        themTrang("bctonkho",   btnBaoCaoTonKho,     new BaoCaoTonKhoPanel());
-        themTrang("bcnhapxuat", btnBaoCaoNhapXuat,   new BaoCaoNhapXuatPanel());
-        themTrang("bcsaphet",   btnBaoCaoHangSapHet, new BaoCaoHangSapHetPanel());
-        //tài khoản
-        ThongTinTaiKhoanPanel view = new ThongTinTaiKhoanPanel();
-        view.setVisible(true);
-        new Controller.TaiKhoanController(view);
-        //TaiKhoanController tkController = new TaiKhoanController(view);
-        themTrang("taikhoan", btnTaiKhoanCuaToi, view);
-        btnTaiKhoanCuaToi.addActionListener(e -> {
-        //view.napThongTin(); // Tải họ tên, vai trò hiển thị lên màn hình
-        hienThi("taikhoancuatoi", btnTaiKhoanCuaToi); 
-});
-        btnDangXuat.addActionListener(e -> dangXuat());
-        hienThi("home", btnTrangChu);
-        trangChu.setDieuHuong(t -> {
-    switch (t) {
-        case "lapphieu" -> hienThi("lapphieu", btnLapPhieu);
-        case "luutru"   -> hienThi("sodokho", btnSoDoViTriKho);
-        case "xuatkho"  -> hienThi("lapphieuxuat", btnLapPhieuXuat);
-        case "kiemke"   -> hienThi("lapphieukiemke", btnLapPhieuKiemKe);
-        case "baocao"   -> hienThi("bctonkho", btnBaoCaoTonKho);
-                }
-    });
-}
+        themTrang("dsphieunhap", btnDSPhieu, dsView);
 
+        // --- Lưu trữ ---
+        CatVaoViTriPanel catView = new CatVaoViTriPanel();
+        new CatVaoViTriController(catView);
+        themTrang("cathang", btnCatHangVaoViTri, catView);
+
+        SoDoKhoPanel soDoView = new SoDoKhoPanel();
+        new SoDoKhoController(soDoView);
+        themTrang("sodokho", btnSoDoViTriKho, soDoView);
+
+        ChuyenViTriPanel cvtView = new ChuyenViTriPanel();
+        new ChuyenViTriController(cvtView);
+        themTrang("chuyenvitri", btnChuyenViTri, cvtView);
+
+        // --- Lấy hàng ---
+        DanhSachLayHangPanel dslhView = new DanhSachLayHangPanel();
+        new DanhSachLayHangController(dslhView);
+        themTrang("dslayhang", btnDanhSachLayHang, dslhView);
+
+        LichSuLayHangPanel lslhView = new LichSuLayHangPanel();
+        new LichSuLayHangController(lslhView);
+        themTrang("lslayhang", btnLichSuLayHang, lslhView);
+
+        // --- Xuất kho ---
+        LapPhieuXuatPanel pxView = new LapPhieuXuatPanel();
+        new LapPhieuXuatController(pxView);
+        themTrang("lapphieuxuat", btnLapPhieuXuat, pxView);
+
+        PhieuXuatDaLuuPanel dsXuatView = new PhieuXuatDaLuuPanel();
+        new PhieuXuatDaLuuController(dsXuatView);
+        themTrang("dsphieuxuat", btnPhieuXuatDaLuu, dsXuatView);
+
+        // --- Hoàn trả ---
+        PhieuHoanTraPanel htView = new PhieuHoanTraPanel();
+        new PhieuHoanTraController(htView);
+        themTrang("lapphieuhoantra", btnLapPhieuHoanTra, htView);
+
+        PhieuHoanTraDaLuuPanel htDsView = new PhieuHoanTraDaLuuPanel();
+        PhieuHoanTraDaLuuController htDsController = new PhieuHoanTraDaLuuController(htDsView);
+        themTrang("dsphieuhoantra", btnPhieuHoanTraDaLuu, htDsView, htDsController::taiLai);
+
+        // --- Kiểm kê ---
+        PhieuKiemKePanel kkView = new PhieuKiemKePanel();
+        new PhieuKiemKeController(kkView);
+        themTrang("lapphieukiemke", btnLapPhieuKiemKe, kkView);
+
+        LichSuKiemKePanel lskkView = new LichSuKiemKePanel();
+        new LichSuKiemKeController(lskkView);
+        themTrang("lskiemke", btnLichSuKiemKe, lskkView);
+
+        // --- Báo cáo ---
+        BaoCaoTonKhoPanel tkView = new BaoCaoTonKhoPanel();
+        new BaoCaoTonKhoController(tkView);
+        themTrang("bctonkho", btnBaoCaoTonKho, tkView);
+
+        BaoCaoNhapXuatPanel nxView = new BaoCaoNhapXuatPanel();
+        new BaoCaoNhapXuatController(nxView);
+        themTrang("bcnhapxuat", btnBaoCaoNhapXuat, nxView);
+
+        BaoCaoHangSapHetPanel shView = new BaoCaoHangSapHetPanel();
+        new BaoCaoHangSapHetController(shView);
+        themTrang("bcsaphet", btnBaoCaoHangSapHet, shView);
+
+        // --- Tài khoản ---
+        ThongTinTaiKhoanPanel tkPanel = new ThongTinTaiKhoanPanel();
+        new TaiKhoanController(tkPanel);
+        themTrang("taikhoan", btnTaiKhoanCuaToi, tkPanel);
+
+        btnDangXuat.addActionListener(e -> dangXuat());
+
+        hienThi("home", btnTrangChu);
+
+        // Điều hướng từ các nút nhanh ở trang chủ
+        trangChu.setDieuHuong(t -> {
+            switch (t) {
+                case "lapphieu" -> { moNhom(pnlNhapKho); hienThi("lapphieunhap",   btnLapPhieu); }
+                case "luutru"   -> { moNhom(pnlLuuTru);  hienThi("sodokho",        btnSoDoViTriKho); }
+                case "xuatkho"  -> { moNhom(pnlXuatKho); hienThi("lapphieuxuat",   btnLapPhieuXuat); }
+                case "kiemke"   -> { moNhom(pnlKiemKe);  hienThi("lapphieukiemke", btnLapPhieuKiemKe); }
+                case "baocao"   -> { moNhom(pnlBaoCao);  hienThi("bctonkho",       btnBaoCaoTonKho); }
+            }
+        });
+    }
+
+    // Mở đúng một nhóm menu con, đóng các nhóm còn lại
+    private void moNhom(javax.swing.JPanel p) {
+        for (javax.swing.JPanel q : panelCon) q.setVisible(false);
+        p.setVisible(true);
+        pnlItems.revalidate();
+        pnlItems.repaint();
+    }
     // Đăng xuất: hỏi xác nhận rồi quay về màn hình đăng nhập
     private void dangXuat() {
         int c = javax.swing.JOptionPane.showConfirmDialog(this,

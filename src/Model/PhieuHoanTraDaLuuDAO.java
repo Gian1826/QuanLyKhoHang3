@@ -3,87 +3,126 @@ package Model;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import javax.swing.table.DefaultTableModel;
+import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PhieuHoanTraDaLuuDAO {
 
-    public void layDanhSachPhieuHoanTra(String tuNgay, String denNgay, String tuKhoa, String trangThai, DefaultTableModel model) {
+    private static final DateTimeFormatter DMY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    public String loiCuoi = "";
+
+    /**
+     * Tìm phiếu. Tham số null/rỗng thì bỏ qua. tuNgay/denNgay dạng yyyy-MM-dd.
+     * trangThai: 0 nháp, 1 đã lưu, 2 đã hủy. Mỗi dòng: {maPhieu, ngay
+     * dd/MM/yyyy, maPhieuXuat, nguoiLap, soMatHang, trangThai(int)}
+     */
+    public List<Object[]> timKiem(String tuNgay, String denNgay, String tuKhoa, Integer trangThai) {
+        List<Object[]> ds = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-            "SELECT p.MaPhieuHoanTra, p.NgayHoanTra, p.MaPhieuXuat, t.TenDangNhap, " +
-            "(SELECT COUNT(MaSanPham) FROM ChiTietHoanTra WHERE MaPhieuHoanTra = p.MaPhieuHoanTra) AS SoMatHang, p.TrangThai " +
-            "FROM PhieuHoanTra p " +
-            "LEFT JOIN TaiKhoan t ON p.MaTaiKhoan = t.MaTaiKhoan " +
-            "WHERE 1=1 "
-        );
+                "SELECT h.MaPhieuHoanTra, h.NgayHoanTra, h.MaPhieuXuat, t.TenDangNhap, "
+                + "(SELECT COUNT(*) FROM ChiTietHoanTra c WHERE c.MaPhieuHoanTra = h.MaPhieuHoanTra) AS SoMatHang, "
+                + "h.TrangThai "
+                + "FROM PhieuHoanTra h "
+                + "LEFT JOIN TaiKhoan t ON h.MaTaiKhoan = t.MaTaiKhoan "
+                + "WHERE 1 = 1 ");
+        List<Object> params = new ArrayList<>();
 
-        if (tuNgay != null && !tuNgay.isEmpty()) {
-            sql.append(" AND CAST(p.NgayHoanTra AS DATE) >= ? ");
+        if (tuNgay != null && !tuNgay.trim().isEmpty()) {
+            sql.append("AND CAST(h.NgayHoanTra AS DATE) >= ? ");
+            params.add(java.sql.Date.valueOf(tuNgay.trim()));
         }
-        if (denNgay != null && !denNgay.isEmpty()) {
-            sql.append(" AND CAST(p.NgayHoanTra AS DATE) <= ? ");
+        if (denNgay != null && !denNgay.trim().isEmpty()) {
+            sql.append("AND CAST(h.NgayHoanTra AS DATE) <= ? ");
+            params.add(java.sql.Date.valueOf(denNgay.trim()));
         }
-        if (tuKhoa != null && !tuKhoa.isEmpty()) {
-            sql.append(" AND (p.MaPhieuHoanTra LIKE ? OR p.MaPhieuXuat LIKE ?) ");
+        if (tuKhoa != null && !tuKhoa.trim().isEmpty()) {
+            sql.append("AND (h.MaPhieuHoanTra LIKE ? OR h.MaPhieuXuat LIKE ?) ");
+            String kw = "%" + tuKhoa.trim() + "%";
+            params.add(kw);
+            params.add(kw);
         }
-
-        Integer ttId = null;
         if (trangThai != null) {
-            if (trangThai.equals("Nháp")) ttId = 0;
-            else if (trangThai.equals("Đã lưu")) ttId = 1;
-            else if (trangThai.equals("Đã hủy")) ttId = 2;
+            sql.append("AND h.TrangThai = ? ");
+            params.add(trangThai);
         }
+        sql.append("ORDER BY h.NgayHoanTra DESC, h.MaPhieuHoanTra DESC");
 
-        if (ttId != null) {
-            sql.append(" AND p.TrangThai = ? ");
-        }
-
-        sql.append(" ORDER BY p.NgayHoanTra DESC");
-
-        try (Connection conn = KetNoiDB.getConnection();
-             PreparedStatement pst = conn.prepareStatement(sql.toString())) {
-            
-            int paramIndex = 1;
-            if (tuNgay != null && !tuNgay.isEmpty()) pst.setString(paramIndex++, tuNgay);
-            if (denNgay != null && !denNgay.isEmpty()) pst.setString(paramIndex++, denNgay);
-            if (tuKhoa != null && !tuKhoa.isEmpty()) {
-                pst.setString(paramIndex++, "%" + tuKhoa + "%");
-                pst.setString(paramIndex++, "%" + tuKhoa + "%");
+        try (Connection conn = KetNoiDB.getConnection(); PreparedStatement pst = conn.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                pst.setObject(i + 1, params.get(i));
             }
-            if (ttId != null) pst.setInt(paramIndex++, ttId);
-
             try (ResultSet rs = pst.executeQuery()) {
-                model.setRowCount(0);
                 while (rs.next()) {
-                    String tenTrangThai = "";
-                    switch (rs.getInt("TrangThai")) {
-                        case 0: tenTrangThai = "Nháp"; break;
-                        case 1: tenTrangThai = "Đã lưu"; break;
-                        case 2: tenTrangThai = "Đã hủy"; break;
-                    }
-
-                    model.addRow(new Object[]{
+                    Timestamp ts = rs.getTimestamp("NgayHoanTra");
+                    ds.add(new Object[]{
                         rs.getString("MaPhieuHoanTra"),
-                        rs.getDate("NgayHoanTra"),
+                        ts == null ? "" : ts.toLocalDateTime().toLocalDate().format(DMY),
                         rs.getString("MaPhieuXuat"),
                         rs.getString("TenDangNhap"),
                         rs.getInt("SoMatHang"),
-                        tenTrangThai
+                        rs.getInt("TrangThai")
                     });
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+            loiCuoi = e.getMessage();
         }
+        return ds;
     }
 
-    public boolean huyPhieuHoanTra(String maPhieu) {
-        String sql = "UPDATE PhieuHoanTra SET TrangThai = 2 WHERE MaPhieuHoanTra = ?";
-        try (Connection conn = KetNoiDB.getConnection();
-             PreparedStatement pst = conn.prepareStatement(sql)) {
+    // {maSanPham, tenSanPham, soLuongHoan, tinhTrang}
+    public List<Object[]> layChiTietDaLuu(String maPhieu) {
+        List<Object[]> ds = new ArrayList<>();
+        String sql = "SELECT c.MaSanPham, s.TenSanPham, c.SoLuongHoan, c.TinhTrang "
+                + "FROM ChiTietHoanTra c "
+                + "LEFT JOIN SanPham s ON c.MaSanPham = s.MaSanPham "
+                + "WHERE c.MaPhieuHoanTra = ?";
+        try (Connection conn = KetNoiDB.getConnection(); PreparedStatement pst = conn.prepareStatement(sql)) {
             pst.setString(1, maPhieu);
-            return pst.executeUpdate() > 0;
+            try (ResultSet rs = pst.executeQuery()) {
+                while (rs.next()) {
+                    ds.add(new Object[]{rs.getString(1), rs.getString(2), rs.getInt(3), rs.getString(4)});
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
+            loiCuoi = e.getMessage();
+        }
+        return ds;
+    }
+
+    // Đầu phiếu cho nút Sửa: {ngay dd/MM/yyyy, maPhieuXuat, lyDo}
+    public Object[] layPhieu(String maPhieu) {
+        String sql = "SELECT NgayHoanTra, MaPhieuXuat, LyDo FROM PhieuHoanTra WHERE MaPhieuHoanTra = ?";
+        try (Connection conn = KetNoiDB.getConnection(); PreparedStatement pst = conn.prepareStatement(sql)) {
+            pst.setString(1, maPhieu);
+            try (ResultSet rs = pst.executeQuery()) {
+                if (rs.next()) {
+                    Timestamp ts = rs.getTimestamp(1);
+                    String ngay = ts == null ? "" : ts.toLocalDateTime().toLocalDate().format(DMY);
+                    return new Object[]{ngay, rs.getString(2), rs.getString(3)};
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            loiCuoi = e.getMessage();
+        }
+        return null;
+    }
+
+    // Hủy phiếu: TrangThai = 2 (chỉ hủy được nháp hoặc đã lưu)
+    public boolean huyPhieu(String maPhieu) {
+        String sql = "UPDATE PhieuHoanTra SET TrangThai = 2 WHERE MaPhieuHoanTra = ? AND TrangThai IN (0, 1)";
+        try (Connection conn = KetNoiDB.getConnection(); PreparedStatement pst = conn.prepareStatement(sql)) {
+            pst.setString(1, maPhieu);
+            return pst.executeUpdate() == 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            loiCuoi = e.getMessage();
             return false;
         }
     }

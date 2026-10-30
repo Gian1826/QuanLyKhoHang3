@@ -25,7 +25,31 @@ public class LichSuLayHangDAO {
         }
         return list;
     }
-
+    public void layChiTietLenh(String maLenh, DefaultTableModel model) {
+        String sql = "SELECT sp.MaSanPham, sp.TenSanPham, ct.MaViTri, "
+                   + "       ct.SoLuongCanLay, ct.SoLuongDaLay "
+                   + "FROM ChiTietLayHang ct "
+                   + "JOIN SanPham sp ON ct.MaSanPham = sp.MaSanPham "
+                   + "WHERE ct.MaLenh = ?";
+        try (Connection conn = KetNoiDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, maLenh);
+            try (ResultSet rs = ps.executeQuery()) {
+                model.setRowCount(0);
+                while (rs.next()) {
+                    model.addRow(new Object[]{
+                        rs.getString("MaSanPham"),
+                        rs.getString("TenSanPham"),
+                        rs.getString("MaViTri"),
+                        rs.getInt("SoLuongCanLay"),
+                        rs.getInt("SoLuongDaLay")
+                    });
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
     // Truy vấn dữ liệu lịch sử dựa trên bộ lọc
     public void timKiemLichSu(String tuNgay, String denNgay, String nguoiLay, String trangThai, DefaultTableModel model) {
         StringBuilder sql = new StringBuilder(

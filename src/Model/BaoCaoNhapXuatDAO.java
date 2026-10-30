@@ -24,55 +24,46 @@ public class BaoCaoNhapXuatDAO {
         return list;
     }
 
-    public void layDuLieuBaoCao(String tuNgay, String denNgay, String danhMuc, DefaultTableModel model) {
-        // Lưu ý: Logic tính toán tồn đầu kỳ, nhập, xuất, tồn cuối kỳ thực tế phức tạp hơn.
-        // Đây là một truy vấn ví dụ để hiển thị dữ liệu lên bảng.
-        StringBuilder sql = new StringBuilder(
-            "SELECT s.MaSanPham, s.TenSanPham, " +
-            "0 AS TonDauKy, " + // Cần logic SQL phức tạp hơn để tính chính xác
-            "ISNULL((SELECT SUM(SoLuong) FROM ChiTietPhieuNhap cpn JOIN PhieuNhap pn ON cpn.MaPhieuNhap = pn.MaPhieuNhap WHERE cpn.MaSanPham = s.MaSanPham AND pn.TrangThai = 1 AND pn.NgayNhap BETWEEN ? AND ?), 0) AS Nhap, " +
-            "ISNULL((SELECT SUM(SoLuong) FROM ChiTietPhieuXuat cpx JOIN PhieuXuat px ON cpx.MaPhieuXuat = px.MaPhieuXuat WHERE cpx.MaSanPham = s.MaSanPham AND px.TrangThai = 1 AND px.NgayXuat BETWEEN ? AND ?), 0) AS Xuat, " +
-            "ISNULL(SUM(t.SoLuongTon), 0) AS TonCuoiKy " + // Cần logic SQL phức tạp hơn để tính chính xác
-            "FROM SanPham s " +
-            "JOIN DanhMuc d ON s.MaDanhMuc = d.MaDanhMuc " +
-            "LEFT JOIN TonKho t ON s.MaSanPham = t.MaSanPham " +
-            "WHERE s.TrangThai = 1 "
-        );
+    public int layDuLieuBaoCao(java.sql.Timestamp tu, java.sql.Timestamp denCong1,
+                           String danhMuc, DefaultTableModel model) throws Exception {
+    StringBuilder sql = new StringBuilder(
+        "SELECT s.MaSanPham, s.TenSanPham, " +
+        "ISNULL((SELECT SUM(c.SoLuong) FROM ChiTietPhieuNhap c JOIN PhieuNhap p ON c.MaPhieuNhap = p.MaPhieuNhap " +
+        "        WHERE c.MaSanPham = s.MaSanPham AND p.TrangThai = 1 AND p.NgayNhap >= ? AND p.NgayNhap < ?), 0) AS Nhap, " +
+        "ISNULL((SELECT SUM(c.SoLuong) FROM ChiTietPhieuXuat c JOIN PhieuXuat p ON c.MaPhieuXuat = p.MaPhieuXuat " +
+        "        WHERE c.MaSanPham = s.MaSanPham AND p.TrangThai = 1 AND p.NgayXuat >= ? AND p.NgayXuat < ?), 0) AS Xuat, " +
+        "ISNULL((SELECT SUM(c.SoLuong) FROM ChiTietPhieuNhap c JOIN PhieuNhap p ON c.MaPhieuNhap = p.MaPhieuNhap " +
+        "        WHERE c.MaSanPham = s.MaSanPham AND p.TrangThai = 1 AND p.NgayNhap >= ?), 0) AS NhapSau, " +
+        "ISNULL((SELECT SUM(c.SoLuong) FROM ChiTietPhieuXuat c JOIN PhieuXuat p ON c.MaPhieuXuat = p.MaPhieuXuat " +
+        "        WHERE c.MaSanPham = s.MaSanPham AND p.TrangThai = 1 AND p.NgayXuat >= ?), 0) AS XuatSau, " +
+        "ISNULL((SELECT SUM(t.SoLuongTon) FROM TonKho t WHERE t.MaSanPham = s.MaSanPham), 0) AS TonHienTai " +
+        "FROM SanPham s JOIN DanhMuc d ON s.MaDanhMuc = d.MaDanhMuc " +
+        "WHERE s.TrangThai = 1 ");
 
-        if (danhMuc != null && !danhMuc.equals("Tất cả")) {
-            sql.append(" AND d.TenDanhMuc = ? ");
-        }
+    boolean loc = danhMuc != null && !danhMuc.equals("Tất cả");
+    if (loc) sql.append(" AND d.TenDanhMuc = ? ");
+    sql.append(" ORDER BY s.MaSanPham");
 
-        sql.append(" GROUP BY s.MaSanPham, s.TenSanPham ");
+    try (Connection conn = KetNoiDB.getConnection();
+         PreparedStatement pst = conn.prepareStatement(sql.toString())) {
+        int i = 1;
+        pst.setTimestamp(i++, tu);       pst.setTimestamp(i++, denCong1);   // nhập trong kỳ
+        pst.setTimestamp(i++, tu);       pst.setTimestamp(i++, denCong1);   // xuất trong kỳ
+        pst.setTimestamp(i++, denCong1);                                    // nhập sau kỳ
+        pst.setTimestamp(i++, denCong1);                                    // xuất sau kỳ
+        if (loc) pst.setString(i++, danhMuc);
 
-        try (Connection conn = KetNoiDB.getConnection();
-             PreparedStatement pst = conn.prepareStatement(sql.toString())) {
-            
-            int paramIndex = 1;
-            // set tham số cho subquery Nhập
-            pst.setString(paramIndex++, tuNgay);
-            pst.setString(paramIndex++, denNgay);
-            // set tham số cho subquery Xuất
-            pst.setString(paramIndex++, tuNgay);
-            pst.setString(paramIndex++, denNgay);
-            
-            if (danhMuc != null && !danhMuc.equals("Tất cả")) pst.setString(paramIndex++, danhMuc);
-
-            try (ResultSet rs = pst.executeQuery()) {
-                model.setRowCount(0);
-                while (rs.next()) {
-                    model.addRow(new Object[]{
-                        rs.getString("MaSanPham"),
-                        rs.getString("TenSanPham"),
-                        rs.getInt("TonDauKy"),
-                        rs.getInt("Nhap"),
-                        rs.getInt("Xuat"),
-                        rs.getInt("TonCuoiKy")
-                    });
-                }
+        try (ResultSet rs = pst.executeQuery()) {
+            model.setRowCount(0);
+            while (rs.next()) {
+                int nhap = rs.getInt("Nhap"), xuat = rs.getInt("Xuat");
+                int cuoi = rs.getInt("TonHienTai") - rs.getInt("NhapSau") + rs.getInt("XuatSau");
+                int dau = cuoi - nhap + xuat;
+                model.addRow(new Object[]{rs.getString("MaSanPham"), rs.getString("TenSanPham"),
+                    dau, nhap, xuat, cuoi});
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            return model.getRowCount();
         }
     }
+}
 }

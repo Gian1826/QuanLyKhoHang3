@@ -201,15 +201,18 @@ public class PhieuNhapController {
             return;
         }
 
-        java.sql.Date ngay;
-        try {
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-            sdf.setLenient(false);
-            ngay = new java.sql.Date(sdf.parse(txtNgayNhap.getText().trim()).getTime());
-        } catch (java.text.ParseException ex) {
-            JOptionPane.showMessageDialog(view, "Ngày nhập phải có dạng dd/MM/yyyy!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+        java.sql.Timestamp ngay;
+try {
+    java.time.format.DateTimeFormatter f = java.time.format.DateTimeFormatter
+            .ofPattern("dd/MM/uuuu")
+            .withResolverStyle(java.time.format.ResolverStyle.STRICT);
+    java.time.LocalDate ld = java.time.LocalDate.parse(txtNgayNhap.getText().trim(), f);
+    // Ngày trên form + giờ thực lúc bấm Lưu
+    ngay = java.sql.Timestamp.valueOf(ld.atTime(java.time.LocalTime.now().withNano(0)));
+} catch (java.time.format.DateTimeParseException ex) {
+    JOptionPane.showMessageDialog(view, "Ngày nhập phải có dạng dd/MM/yyyy!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+    return;
+}
 
         List<PhieuNhapDAO.DongNhap> ds = new ArrayList<>();
         for (int i = 0; i < model.getRowCount(); i++) {

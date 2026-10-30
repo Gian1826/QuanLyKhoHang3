@@ -26,7 +26,19 @@ public class CatVaoViTriDAO {
         }
         return list;
     }
-
+    public String layKhuCuaPhieu(String maPhieu) {
+    String sql = "SELECT MaKhu FROM PhieuNhap WHERE MaPhieuNhap = ?";   // sửa tên cột nếu khác
+    try (Connection conn = KetNoiDB.getConnection();
+         PreparedStatement pst = conn.prepareStatement(sql)) {
+        pst.setString(1, maPhieu);
+        try (ResultSet rs = pst.executeQuery()) {
+            if (rs.next()) return rs.getString(1);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return null;
+    }
     // Đổ dữ liệu các sản phẩm cần cất vào JTable
     public void layChiTietPhieu(String maPhieu, DefaultTableModel model) {
         String sql = "SELECT c.MaSanPham, s.TenSanPham, (c.SoLuong - c.SoLuongDaCat) AS SLCanCat, c.ViTriDeXuat " +
@@ -53,7 +65,6 @@ public class CatVaoViTriDAO {
             e.printStackTrace();
         }
     }
-
     // Thực hiện lưu Transaction (Cập nhật phiếu nhập & cộng dồn Tồn kho)
     public boolean xacNhanCatHang(String maPhieu, DefaultTableModel model) {
         String sqlUpdChiTiet = "UPDATE ChiTietPhieuNhap SET SoLuongDaCat = SoLuongDaCat + ? WHERE MaPhieuNhap = ? AND MaSanPham = ?";

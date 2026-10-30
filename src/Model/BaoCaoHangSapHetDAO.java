@@ -26,48 +26,40 @@ public class BaoCaoHangSapHetDAO {
     }
 
     // Truy vấn dữ liệu từ View vw_HangSapHet kết hợp bảng SanPham và DanhMuc
-    public void layDuLieuHangSapHet(String danhMuc, String trangThaiLoc, DefaultTableModel model) {
-        StringBuilder sql = new StringBuilder(
-            "SELECT h.MaSanPham, h.TenSanPham, h.Ton, h.ToiThieu, h.CanNhapThem, h.TrangThai " +
-            "FROM vw_HangSapHet h " +
-            "JOIN SanPham s ON h.MaSanPham = s.MaSanPham " +
-            "JOIN DanhMuc d ON s.MaDanhMuc = d.MaDanhMuc " +
-            "WHERE 1=1 "
-        );
+    public int layDuLieuHangSapHet(String danhMuc, String trangThaiLoc, DefaultTableModel model) throws Exception {
+    StringBuilder sql = new StringBuilder(
+        "SELECT h.MaSanPham, h.TenSanPham, h.Ton, h.ToiThieu, h.CanNhapThem, h.TrangThai " +
+        "FROM vw_HangSapHet h " +
+        "JOIN SanPham s ON h.MaSanPham = s.MaSanPham " +
+        "JOIN DanhMuc d ON s.MaDanhMuc = d.MaDanhMuc " +
+        "WHERE 1=1 ");
 
-        if (danhMuc != null && !danhMuc.equals("Tất cả")) {
-            sql.append(" AND d.TenDanhMuc = ? ");
-        }
-        if (trangThaiLoc != null && !trangThaiLoc.equals("Tất cả")) {
-            sql.append(" AND h.TrangThai = ? ");
-        }
+    boolean locDM = danhMuc != null && !danhMuc.equals("Tất cả");
+    boolean locTT = trangThaiLoc != null && !trangThaiLoc.equals("Tất cả");
+    if (locDM) sql.append(" AND d.TenDanhMuc = ? ");
+    if (locTT) sql.append(" AND h.TrangThai = ? ");
+    sql.append(" ORDER BY h.Ton");
 
-        try (Connection conn = KetNoiDB.getConnection();
-             PreparedStatement pst = conn.prepareStatement(sql.toString())) {
-            
-            int paramIndex = 1;
-            if (danhMuc != null && !danhMuc.equals("Tất cả")) {
-                pst.setString(paramIndex++, danhMuc);
-            }
-            if (trangThaiLoc != null && !trangThaiLoc.equals("Tất cả")) {
-                pst.setString(paramIndex++, trangThaiLoc); // "Hết hàng" hoặc "Sắp hết"
-            }
+    try (Connection conn = KetNoiDB.getConnection();
+         PreparedStatement pst = conn.prepareStatement(sql.toString())) {
+        int i = 1;
+        if (locDM) pst.setString(i++, danhMuc);
+        if (locTT) pst.setString(i++, trangThaiLoc);
 
-            try (ResultSet rs = pst.executeQuery()) {
-                model.setRowCount(0);
-                while (rs.next()) {
-                    model.addRow(new Object[]{
-                        rs.getString("MaSanPham"),
-                        rs.getString("TenSanPham"),
-                        rs.getInt("Ton"),
-                        rs.getInt("ToiThieu"),
-                        rs.getInt("CanNhapThem"),
-                        rs.getString("TrangThai")
-                    });
-                }
+        try (ResultSet rs = pst.executeQuery()) {
+            model.setRowCount(0);
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("MaSanPham"),
+                    rs.getString("TenSanPham"),
+                    rs.getInt("Ton"),
+                    rs.getInt("ToiThieu"),
+                    rs.getInt("CanNhapThem"),
+                    rs.getString("TrangThai")
+                });
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            return model.getRowCount();
         }
     }
+}
 }

@@ -10,8 +10,10 @@ import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
+import javax.swing.JTable;
 
 public class PhieuHoanTraController {
+
     private PhieuHoanTraPanel view;
     private PhieuHoanTraDAO dao;
 
@@ -20,15 +22,31 @@ public class PhieuHoanTraController {
         this.dao = new PhieuHoanTraDAO();
         initController();
     }
+    // Thay model cũ (đang khóa hết ô) bằng model cho sửa cột 4 và 5
+
+    private void choPhepNhapBang() {
+        JTable tbl = view.getTableChiTiet();
+        DefaultTableModel moi = new DefaultTableModel(
+                new Object[][]{},
+                new String[]{"STT", "Mã SP", "Tên SP", "SL Đề Xuất", "SL Hoàn Trả", "Tình Trạng"}) {
+            @Override
+            public boolean isCellEditable(int row, int col) {
+                return col == 4 || col == 5;
+            }
+        };
+        tbl.setModel(moi);
+        tbl.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE); // bấm ra ngoài vẫn giữ giá trị vừa gõ
+    }
 
     private void initController() {
         // Khởi tạo thông tin tĩnh
-        if(PhienDangNhap.hoTen != null) {
+        if (PhienDangNhap.hoTen != null) {
             view.getTxtNguoiLap().setText(PhienDangNhap.hoTen);
             view.getTxtNguoiLap().setEditable(false);
         }
-        
+
         loadComboBoxPhieuXuat();
+        choPhepNhapBang();
         setupTableTinhTrang(); // Cấu hình combobox cho cột Tình trạng
 
         // Sự kiện khi chọn Phiếu Xuất Gốc
@@ -43,7 +61,9 @@ public class PhieuHoanTraController {
                 }
             }
         });
+        view.getBtnHuy().addActionListener(e -> xoaTrangForm());
 
+        xoaTrangForm();
         // Xử lý nút Lưu Nháp (Trạng thái = 0)
         view.getBtnLuuNhap().addActionListener(e -> xuLyLuu(0));
 
@@ -83,7 +103,7 @@ public class PhieuHoanTraController {
 
         String maPhieuXuatGoc = view.getCbPhieuXuatGoc().getSelectedItem().toString();
         DefaultTableModel model = (DefaultTableModel) view.getTableChiTiet().getModel();
-        
+
         if (model.getRowCount() == 0) {
             JOptionPane.showMessageDialog(view, "Không có dữ liệu mặt hàng!");
             return;
@@ -97,18 +117,18 @@ public class PhieuHoanTraController {
                 int slHoan = Integer.parseInt(model.getValueAt(i, 4).toString());
 
                 if (slHoan < 0) {
-                    JOptionPane.showMessageDialog(view, "Dòng " + (i+1) + ": Số lượng hoàn trả không được âm!");
+                    JOptionPane.showMessageDialog(view, "Dòng " + (i + 1) + ": Số lượng hoàn trả không được âm!");
                     return;
                 }
                 if (slHoan > slDeXuat) {
-                    JOptionPane.showMessageDialog(view, "Dòng " + (i+1) + ": Số lượng hoàn trả lớn hơn số lượng xuất ban đầu!");
+                    JOptionPane.showMessageDialog(view, "Dòng " + (i + 1) + ": Số lượng hoàn trả lớn hơn số lượng xuất ban đầu!");
                     return;
                 }
                 if (slHoan > 0) {
                     coHangHoanTra = true;
                 }
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(view, "Dòng " + (i+1) + ": Số lượng hoàn trả phải là số!");
+                JOptionPane.showMessageDialog(view, "Dòng " + (i + 1) + ": Số lượng hoàn trả phải là số!");
                 return;
             }
         }
@@ -128,12 +148,18 @@ public class PhieuHoanTraController {
             JOptionPane.showMessageDialog(view, "Lỗi lưu dữ liệu. Vui lòng kiểm tra lại (có thể trùng Mã phiếu)!");
         }
     }
-
+    public void napLai() {
+    loadComboBoxPhieuXuat();
+    xoaTrangForm();
+    }
     private void xoaTrangForm() {
-        view.getTxtMaPhieu().setText("");
-        view.getTxtNgayHoanTra().setText("");
-        view.getTxtLyDoHoanTra().setText("");
+    view.getTxtMaPhieu().setText(dao.taoMaMoi());
+    view.getTxtNgayHoanTra().setText(
+            java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+    view.getTxtLyDoHoanTra().setText("");
+    if (view.getCbPhieuXuatGoc().getItemCount() > 0) {
         view.getCbPhieuXuatGoc().setSelectedIndex(0);
-        ((DefaultTableModel) view.getTableChiTiet().getModel()).setRowCount(0);
+    }
+    ((DefaultTableModel) view.getTableChiTiet().getModel()).setRowCount(0);
     }
 }

@@ -96,14 +96,14 @@ public class PhieuNhapDAO {
         }
         throw new SQLException("Không tìm thấy tài khoản: " + tenDangNhap);
     }
-
+    
     /**
      * Lưu phiếu nhập + chi tiết trong 1 transaction.
      * @return mã phiếu đã lưu
      * @throws Exception nếu có lỗi (đã rollback), controller sẽ hiện thông báo
      */
-    public static String luuPhieuNhap(java.sql.Date ngayNhap, String tenDangNhap, String maKhu,
-                                      String ghiChu, List<DongNhap> dsDong) throws Exception {
+    public static String luuPhieuNhap(java.sql.Timestamp ngayNhap, String tenDangNhap, String maKhu,
+                                  String ghiChu, List<DongNhap> dsDong) throws Exception {
         if (dsDong == null || dsDong.isEmpty()) {
             throw new IllegalArgumentException("Phiếu chưa có dòng hàng nào!");
         }
@@ -125,7 +125,7 @@ public class PhieuNhapDAO {
                     + "VALUES (?, ?, ?, ?, ?, ?, ?)";
             try (PreparedStatement ps = conn.prepareStatement(sqlPhieu)) {
                 ps.setString(1, maPhieu);
-                ps.setDate(2, ngayNhap);
+                ps.setTimestamp(2, ngayNhap);
                 ps.setInt(3, maTaiKhoan);
                 ps.setString(4, maKhu);
                 ps.setDouble(5, tongTien);

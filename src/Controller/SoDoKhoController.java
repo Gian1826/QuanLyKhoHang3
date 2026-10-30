@@ -1,108 +1,137 @@
 package Controller;
 
 import Model.SoDoKhoDAO;
-import View.SoDoKhoPanel; 
+import View.SoDoKhoPanel;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.event.HierarchyEvent;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 public class SoDoKhoController {
-    private SoDoKhoPanel view;
-    private SoDoKhoDAO dao;
+    private final SoDoKhoPanel view;
+    private final SoDoKhoDAO dao;
 
-    // Định nghĩa màu sắc theo chú thích trên giao diện
-    private final Color COLOR_TRONG = Color.WHITE;
-    private final Color COLOR_COHANG = new Color(173, 216, 230); // Xanh dương nhạt
-    private final Color COLOR_DAY = new Color(25, 25, 112);      // Xanh dương đậm
+    private static final int SO_O_MOI_KHU = 24;
+    private static final String[] CAC_KHU = {"A", "B", "C", "D"};
+
+    private final Color COLOR_TRONG  = Color.WHITE;
+    private final Color COLOR_COHANG = new Color(173, 216, 242);
+    private final Color COLOR_DAY    = new Color(23, 64, 110);
 
     public SoDoKhoController(SoDoKhoPanel view) {
         this.view = view;
         this.dao = new SoDoKhoDAO();
         initController();
-        veSoDoKho(); // Vẽ sơ đồ lần đầu
+        veSoDoKho();
+    }
+
+    private JPanel[] cacPanel() {
+        return new JPanel[]{view.getPnlKhuA(), view.getPnlKhuB(),
+                            view.getPnlKhuC(), view.getPnlKhuD()};
     }
 
     private void initController() {
-        // Cài đặt Layout dạng lưới cho các Panel Khu A, B, C, D
-        view.getPnlKhuA().setLayout(new GridLayout(0, 4, 5, 5)); // 4 cột, khoảng cách 5px
-        view.getPnlKhuB().setLayout(new GridLayout(0, 4, 5, 5));
-        view.getPnlKhuC().setLayout(new GridLayout(0, 4, 5, 5));
-        view.getPnlKhuD().setLayout(new GridLayout(0, 4, 5, 5));
+        // Mỗi khu: 6 hàng x 4 cột = 24 ô
+        for (JPanel p : cacPanel()) {
+            p.setLayout(new GridLayout(6, 4, 5, 5));
+        }
 
-        // Sự kiện bộ lọc Khu
+        view.getTxtViTri().setEditable(false);
+        view.getTxtSanPham().setEditable(false);
+        view.getTxtSoLuong().setEditable(false);
+        view.getTxtSucChua().setEditable(false);
+
+        // Nạp lại danh sách lọc (bỏ các mục thừa "Khu C " và " " trong giao diện)
+        view.getCbKhu().removeAllItems();
+        view.getCbKhu().addItem("Tất cả");
+        view.getCbKhu().addItem("Khu A");
+        view.getCbKhu().addItem("Khu B");
+        view.getCbKhu().addItem("Khu C");
+        view.getCbKhu().addItem("Khu D");
         view.getCbKhu().addActionListener(e -> veSoDoKho());
 
-        // Sự kiện nút Cất hàng vào đây
-        view.getBtnCatHangVaoDay().addActionListener(e -> {
-            String viTri = view.getTxtViTri().getText();
-            if (viTri.isEmpty()) {
-                JOptionPane.showMessageDialog(view, "Vui lòng chọn một vị trí trên sơ đồ!");
-            } else {
-                JOptionPane.showMessageDialog(view, "Chuyển đến màn hình Cất Hàng cho vị trí: " + viTri);
-                // Có thể tích hợp logic chuyển thẻ (CardLayout) sang màn hình Cất Hàng tại đây
+        // Mở lại màn hình thì vẽ lại để thấy số liệu mới
+        view.addHierarchyListener(e -> {
+            if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0 && view.isShowing()) {
+                veSoDoKho();
             }
         });
     }
-
     private void veSoDoKho() {
-        // Xóa các ô cũ
-        view.getPnlKhuA().removeAll();
-        view.getPnlKhuB().removeAll();
-        view.getPnlKhuC().removeAll();
-        view.getPnlKhuD().removeAll();
+        JPanel[] panels = cacPanel();
+        for (JPanel p : panels) p.removeAll();
 
-        String khuLoc = view.getCbKhu().getSelectedItem().toString();
-        List<Object[]> dsViTri = dao.layDanhSachViTri(khuLoc);
-
-        for (Object[] vt : dsViTri) {
-            String maViTri = vt[0].toString();
-            String maKhu = vt[1].toString();
-            int sucChua = (int) vt[2];
-            int tongTon = (int) vt[3];
-
-            JButton btnO = new JButton(maViTri);
-            btnO.setPreferredSize(new Dimension(80, 50));
-            
-            // Xử lý màu sắc dựa trên số lượng tồn
-            if (tongTon == 0) {
-                btnO.setBackground(COLOR_TRONG);
-                btnO.setForeground(Color.BLACK);
-            } else if (tongTon >= sucChua) {
-                btnO.setBackground(COLOR_DAY);
-                btnO.setForeground(Color.WHITE);
-            } else {
-                btnO.setBackground(COLOR_COHANG);
-                btnO.setForeground(Color.BLACK);
-            }
-
-            // Gắn sự kiện click hiển thị chi tiết bên phải
-            btnO.addActionListener(e -> hienThiChiTiet(maViTri, tongTon, sucChua));
-
-            // Thêm nút vào Panel tương ứng
-            switch (maKhu) {
-                case "A": view.getPnlKhuA().add(btnO); break;
-                case "B": view.getPnlKhuB().add(btnO); break;
-                case "C": view.getPnlKhuC().add(btnO); break;
-                case "D": view.getPnlKhuD().add(btnO); break;
+        // Khu đang lọc: null = tất cả
+        Object chon = view.getCbKhu().getSelectedItem();
+        String khuLoc = null;
+        if (chon != null) {
+            String s = chon.toString().trim();
+            if (!s.isEmpty() && !s.toLowerCase().contains("tất cả")) {
+                khuLoc = s.substring(s.length() - 1).toUpperCase();   // "Khu A" -> "A"
             }
         }
 
-        // Cập nhật lại giao diện
-        view.revalidate();
-        view.repaint();
+        // Lấy dữ liệu từng khu bằng DAO của bạn (truyền mã khu "A", "B"...)
+        // map: MaViTri -> {SucChua, TongTon}
+        Map<String, int[]> du_lieu = new HashMap<>();
+        for (String maKhu : CAC_KHU) {
+            List<Object[]> ds = dao.layDanhSachViTri(maKhu);
+            for (Object[] vt : ds) {
+                du_lieu.put(vt[0].toString(), new int[]{(int) vt[2], (int) vt[3]});
+            }
+        }
+
+        // Luôn vẽ đủ 24 ô mỗi khu
+        for (int k = 0; k < CAC_KHU.length; k++) {
+            String maKhu = CAC_KHU[k];
+            if (khuLoc != null && !khuLoc.equals(maKhu)) continue;
+
+            for (int i = 1; i <= SO_O_MOI_KHU; i++) {
+                String maViTri = maKhu + "-" + String.format("%02d", i);
+                int[] d = du_lieu.get(maViTri);
+                int sucChua = d == null ? 100 : d[0];
+                int tongTon = d == null ? 0   : d[1];
+                panels[k].add(taoO(maViTri, tongTon, sucChua));
+            }
+        }
+
+        for (JPanel p : panels) {
+            p.revalidate();
+            p.repaint();
+        }
+    }
+
+    private JButton taoO(String maViTri, int tongTon, int sucChua) {
+        JButton btn = new JButton(maViTri);
+        btn.setOpaque(true);
+        btn.setFocusPainted(false);
+
+        if (tongTon <= 0) {
+            btn.setBackground(COLOR_TRONG);
+            btn.setForeground(Color.BLACK);
+        } else if (tongTon >= sucChua) {
+            btn.setBackground(COLOR_DAY);
+            btn.setForeground(Color.WHITE);
+        } else {
+            btn.setBackground(COLOR_COHANG);
+            btn.setForeground(Color.BLACK);
+        }
+
+        btn.setToolTipText(maViTri + ": " + tongTon + "/" + sucChua);
+        btn.addActionListener(e -> hienThiChiTiet(maViTri, tongTon, sucChua));
+        return btn;
     }
 
     private void hienThiChiTiet(String maViTri, int tongTon, int sucChua) {
         view.getTxtViTri().setText(maViTri);
-        view.getTxtSoLuong().setText(tongTon + "");
-        view.getTxtSucChua().setText(sucChua + "");
-        
-        // Lấy tên sản phẩm cụ thể
-        String chiTietSP = dao.layChiTietSanPhamTaiViTri(maViTri);
-        view.getTxtSanPham().setText(chiTietSP);
+        view.getTxtSoLuong().setText(String.valueOf(tongTon));
+        view.getTxtSucChua().setText(String.valueOf(sucChua));
+        // DAO trả về nhiều dòng; ô JTextField chỉ có 1 dòng nên nối bằng dấu phẩy
+        view.getTxtSanPham().setText(dao.layChiTietSanPhamTaiViTri(maViTri).replace("\n", ", "));
     }
 }
